@@ -30,7 +30,7 @@ def on_message(client, userdata, msg):
         print("[ATUADOR] Válvula desligada.")
 
 # Configuração do cliente MQTT
-client = mqtt.Client()
+client = mqtt.Client(protocol=mqtt.MQTTv5, callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
 client.username_pw_set(username, password)
 client.tls_set()
 client.on_connect = on_connect
