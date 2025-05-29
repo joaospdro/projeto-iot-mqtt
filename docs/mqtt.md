@@ -11,8 +11,9 @@ O sistema utiliza o protocolo MQTT para comunicação entre sensores, atuadores 
 
 ## Tópicos Utilizados
 
-- `casa/agua/vazao`: Leituras de vazão publicadas pelo sensor.
-- `casa/agua/controle`: Comandos para o atuador (relé/válvula).
+- `agua/vazao`: Leituras de vazão publicadas pelo sensor.
+- `agua/alerta`: Alertas de vazamento detectado ou prolongado.
+- `agua/comando`: Comandos para o atuador (relé/válvula) e status do sistema.
 
 ## Payloads
 
@@ -26,16 +27,35 @@ Enviadas em formato JSON:
 ```
 - **vazao:** Valor da vazão em L/min.
 
-### Comando de Controle
+### Alertas
 
-Enviado como texto simples:
-- `"FECHAR_VALVULA"`: Aciona o relé para fechar a válvula.
+Enviados em formato JSON:
+```json
+{ "status": "VAZAMENTO_DETECTADO" }
+{ "status": "VAZAMENTO_PROLONGADO" }
+```
+
+### Comandos
+
+Enviados como texto simples ou JSON:
+- `"FECHAR_VALVULA"` ou mensagem contendo `"FECHAR"`: Aciona o relé para fechar a válvula.
+- `"ABRIR_VALVULA"` ou mensagem contendo `"ABRIR"`: Aciona o relé para abrir a válvula.
+- `"STATUS"`: Solicita status atual do sistema.
+
+#### Status publicado em resposta ao comando "STATUS":
+```json
+{
+  "vazao": 1.23,
+  "valvula": "ABERTA",
+  "vazando": true
+}
+```
 
 ## Fluxo de Comunicação
 
-1. O sensor publica leituras periódicas em `casa/agua/vazao`.
-2. O sistema monitora as leituras. Se a vazão exceder o limite por tempo prolongado, publica `"FECHAR_VALVULA"` em `casa/agua/controle`.
-3. O atuador escuta o tópico de controle e aciona a válvula conforme o comando.
+1. O sensor publica leituras periódicas em `agua/vazao`.
+2. O sistema monitora as leituras. Se a vazão exceder o limite por tempo prolongado, publica alerta em `agua/alerta` e comando em `agua/comando`.
+3. O atuador escuta o tópico de comando e aciona a válvula conforme o comando recebido.
 
 ## Segurança
 
@@ -43,16 +63,13 @@ Enviado como texto simples:
 
 ## Bibliotecas
 
-- **Python:** paho-mqtt
-- **NodeMCU/ESP8266:** PubSubClient (C++/Arduino)
+- **ESP32/Arduino:** PubSubClient
 
-## Exemplo de Configuração (Python)
+## Exemplo de Configuração (ESP32/Arduino)
 
-```python
-import paho.mqtt.client as mqtt
-
-client = mqtt.Client()
-client.username_pw_set("usuario", "senha")
-client.tls_set()
-client.connect("broker.hivemq.com", 8883)
+```cpp
+#include <PubSubClient.h>
+client.setServer("e3df973f3f1f43788538f171061f43a7.s1.eu.hivemq.cloud", 8883);
+client.setCallback(mqttCallback);
+client.connect("clientId", "usuario", "senha");
 ```

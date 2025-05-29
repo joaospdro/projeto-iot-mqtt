@@ -1,42 +1,44 @@
-# projeto-iot-mqtt
+# Sistema IoT de Monitoramento e Prevenção de Desperdício de Água
 
-## Descrição
+Este projeto simula um sistema IoT para detecção de vazamentos de água usando ESP32, MQTT (HiveMQ Cloud), potenciômetro (sensor de vazão) e relé (atuador de válvula), totalmente integrado ao simulador Wokwi.
 
-Este projeto implementa um sistema IoT para monitoramento e prevenção de desperdício de água, utilizando sensores de vazão, atuadores (relé) e comunicação via protocolo MQTT. O sistema detecta vazamentos prolongados e aciona automaticamente uma válvula para interromper o fluxo de água.
+## Estrutura
 
-> **Nota:** Este código é um protótipo de simulação, não requer componentes físicos conectados. Todas as leituras e comandos são simulados em software.
+- `sketch.ino`: Código principal para ESP32 (Arduino).
+- `diagram.json`: Diagrama de montagem para Wokwi.
+- `secrets.h`: Arquivo de credenciais e tópicos MQTT.
+- `docs/mqtt.md`: Documentação detalhada do protocolo MQTT utilizado.
 
-## Funcionamento e Uso
+## Como rodar no Wokwi
 
-1. O simulador (`simulador.py`) publica leituras simuladas de vazão de água a cada 5 segundos em um broker MQTT.
-2. Se a vazão permanecer acima de 0,5 L/min por 10 minutos, o sistema publica um comando para acionar o atuador (relé), simulando o fechamento da válvula.
-3. O sistema pode ser reproduzido executando o simulador em Python, com as credenciais do broker MQTT configuradas no arquivo `secrets.py`.
+1. Acesse [Wokwi](https://wokwi.com/).
+2. Importe os arquivos `sketch.ino`, `diagram.json` e `secrets.h`.
+3. O sistema conecta ao WiFi Wokwi-GUEST e ao broker MQTT HiveMQ Cloud.
+4. O potenciômetro simula a vazão de água (0–3 L/min).
+5. O relé simula a válvula de fechamento.
 
-### Como executar
+## Tópicos MQTT
 
-1. Instale as dependências:
-   ```
-   pip install paho-mqtt
-   ```
-2. Configure o arquivo `secrets.py` com as informações do broker MQTT.
-3. Execute o simulador:
-   ```
-   python simulador/simulador.py
-   ```
+- `agua/vazao`: Publica leituras de vazão (JSON).
+- `agua/alerta`: Publica alertas de vazamento detectado/prolongado.
+- `agua/comando`: Recebe comandos para abrir/fechar válvula e publica status.
 
-## Hardware Proposto
+## Comandos aceitos via MQTT
 
-- **Plataforma de Prototipagem:** NodeMCU ESP8266 (Wi-Fi, 32-bit, 4MB Flash)
-- **Sensor de Vazão:** YF-S201 (1–30 L/min, saída digital)
-- **Atuador:** Módulo Relé 5V (controle de válvula)
-- **Conexões:** Sensor conectado ao GPIO do NodeMCU; relé conectado para controle de válvula.
-- **Alimentação:** 5V para sensor e relé.
+- `"FECHAR_VALVULA"` ou mensagem contendo `"FECHAR"`: Fecha a válvula.
+- `"ABRIR_VALVULA"` ou mensagem contendo `"ABRIR"`: Abre a válvula.
+- `"STATUS"`: Publica status atual (vazão, estado da válvula, vazamento).
 
-## Documentação das Interfaces e Protocolos
+## Observações
 
-- **Protocolo de Comunicação:** MQTT sobre TCP/IP (TLS opcional)
-- **Broker:** HiveMQ (ou outro broker MQTT compatível)
-- **Tópicos utilizados:**
-  - `casa/agua/vazao` (publicação de leituras de vazão)
-  - `casa/agua/controle` (comandos para o atuador)
-- **Formato das mensagens:** JSON para leituras de vazão, texto simples para comandos.
+- O sistema publica a vazão a cada 5 segundos.
+- Se a vazão permanecer acima de 0.5 L/min por 10 minutos, a válvula é fechada automaticamente.
+- O código aceita certificados inseguros para simulação no Wokwi.
+
+## Documentação MQTT
+
+Veja detalhes dos tópicos, payloads e exemplos em [`docs/mqtt.md`](docs/mqtt.md).
+
+## Diagrama
+
+Veja o arquivo `diagram.json` para detalhes da montagem.
